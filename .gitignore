@@ -1,0 +1,6 @@
+# Derlenmiş binary ve object dosyaları
+app
+*.o
+*.out
+.vscode/
+*.swp
