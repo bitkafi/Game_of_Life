@@ -1,7 +1,18 @@
-# Derlenmiş binary ve object dosyaları
+# C derleme ve paylaşımlı kütüphane çıktıları
 app
 *.o
 *.out
+*.so
+*.dll
+*.dylib
 
+# .NET / C# derleme çıktıları
+bin/
+obj/
+GolUI/bin/
+GolUI/obj/
+
+# Editör ve sistem dosyaları
 .vscode/
+.idea/
 *.swp
