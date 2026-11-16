@@ -1,48 +1,70 @@
-### Conway's Game of Life (C Engine + C# UI)
+# Conway's Game of Life (C Engine + C# UI)
 
-A high-performance, data-oriented implementation of Conway's Game of Life. The simulation core is written in pure C for cache-friendly execution and auto-vectorization, while the interactive desktop frontend is built in C# (Raylib-cs) reading the C native memory buffer directly via P/Invoke with zero copying.
-Architecture & Optimizations
-
-    Decoupled Core & Frontend (engine.c / GolUI): The simulation engine is compiled as a shared library (libgol.so), completely isolated from presentation logic. It can run either as a standalone ANSI terminal executable or as a native backend for graphical frontends.
-
-    1D Flat Memory Layout: Both generation buffers are allocated as contiguous 1D byte arrays (index = row * stride + col) to maximize CPU L1/L2 cache locality and hardware prefetching.
-
-    Ghost Border (Halo Padding): The grid is allocated with a 1-cell dead padding border ((rows + 2) * (cols + 2)). With outer boundaries guaranteed to be 0, the inner neighbor loop runs completely branch-free, enabling SIMD auto-vectorization.
-
-    O(1) Pointer Swap: State transitions between generations swap the current and next pointers in constant time without memcpy overhead.
-
-    Zero-Copy C# P/Invoke Bridge: The C# frontend allocates native aligned memory (NativeMemory.AllocZeroed), passes raw pointers to libgol.so, and renders directly from the unmanaged buffer without Garbage Collector pressure.
+A data-oriented implementation of Conway's Game of Life. The simulation core is written in plain C with a cache-friendly memory layout and a branch-free inner loop, so the compiler can auto-vectorize it. The interactive desktop frontend is built in C# ([Raylib-cs](https://github.com/ChrisDill/Raylib-cs)) and reads the C engine's memory buffer directly through P/Invoke, without copying.
 
 ![Conway's Game of Life Screenshot](screenshot.png)
 
-### Build & Run
+## Architecture & Optimizations
 
-### Option 1: C# Graphical UI (Raylib-cs)
+- **Decoupled core and frontend (`engine.c` / `GolUI`)**
+  The simulation engine can be compiled as a shared library (`libgol.so`) and has no dependency on presentation code. It runs either inside a standalone ANSI terminal program or as the native backend of a graphical frontend.
 
-Compile the C engine as a shared library and copy it to the UI directory:
+- **1D flat memory layout**
+  Both generation buffers are contiguous 1D byte arrays (`index = row * stride + col`), which keeps access patterns friendly to the CPU caches and hardware prefetcher.
 
-    gcc -O3 -march=native -fPIC -shared engine.c -o GolUI/libgol.so
+- **Ghost border (halo padding)**
+  The grid is allocated as `(rows + 2) * (cols + 2)` with a 1-cell dead border. Because the outer cells are always 0, the inner neighbor-counting loop needs no boundary checks. A branch-free loop is a good candidate for compiler auto-vectorization.
 
-Run the C# frontend:
-    cd GolUI
-    dotnet run -c Release
+- **O(1) pointer swap**
+  Moving to the next generation swaps the `current` and `next` pointers in constant time, with no `memcpy`.
 
-Controls:
+- **Zero-copy C# P/Invoke bridge**
+  The C# frontend allocates unmanaged memory (`NativeMemory.AllocZeroed`), passes the raw pointers to `libgol.so`, and renders straight from that buffer, so the grid never touches the managed heap or the garbage collector.
 
-    Left / Right Click: Draw or erase live cells
+## Requirements
 
-    Space: Pause / Resume simulation
+- Linux (the shared library is built as `libgol.so`)
+- `gcc` (or a compatible C compiler)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) for the graphical frontend (Raylib-cs is restored through NuGet)
 
-    R: Randomize grid
+## Build & Run
 
-    C: Clear grid
+### Option 1: Graphical UI (C# + Raylib-cs)
 
-    Up / Down Arrows: Increase or decrease simulation speed
+Build the engine as a shared library and place it next to the UI project:
 
-### Option 2: Standalone ANSI Terminal Version
-    gcc -O3 -march=native terminal.c engine.c -o app
-    ./app
+```bash
+gcc -O3 -march=native -fPIC -shared engine.c -o GolUI/libgol.so
+```
 
-### License
+Run the frontend:
 
-This project is licensed under the GNU General Public License v3.0 - see the LICENSE file for details.
+```bash
+cd GolUI
+dotnet run -c Release
+```
+
+**Controls**
+
+| Input | Action |
+| --- | --- |
+| Left / Right click | Draw / erase live cells |
+| `Space` | Pause / resume |
+| `R` | Randomize the grid |
+| `C` | Clear the grid |
+| `Up` / `Down` | Increase / decrease simulation speed |
+
+### Option 2: Standalone terminal version
+
+```bash
+gcc -O3 -march=native terminal.c engine.c -o app
+./app
+```
+
+Press `Ctrl+C` to quit.
+
+> **Note:** `-march=native` tunes the binary for the CPU it is built on. Binaries built this way may not run on other machines; drop the flag for a portable build.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
