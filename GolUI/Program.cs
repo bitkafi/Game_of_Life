@@ -4,7 +4,7 @@ using Raylib_cs;
 
 unsafe class Program
 {
-    // C kütüphanendeki fonksiyon imzaları
+    
     [DllImport("libgol.so", CallingConvention = CallingConvention.Cdecl)]
     static extern void init_random(int rows, int cols, byte* map);
 
@@ -19,11 +19,11 @@ unsafe class Program
         int stride = cols + 2;
         nuint totalBytes = (nuint)((rows + 2) * stride);
 
-        // C motorunla uyumlu, hizalı ve sıfırlanmış native bellek tahsisi
+    
         byte* currentGen = (byte*)NativeMemory.AllocZeroed(totalBytes);
         byte* nextGen    = (byte*)NativeMemory.AllocZeroed(totalBytes);
 
-        // C fonksiyonunu çağırarak rastgele harita oluştur
+    
         init_random(rows, cols, currentGen);
 
         Raylib.InitWindow(cols * cellSize, rows * cellSize + 40, "Conway's Game of Life - C Engine + C# UI");
@@ -32,11 +32,11 @@ unsafe class Program
         bool paused = false;
         int generation = 0;
         double timer = 0.0;
-        double stepInterval = 0.05; // 50ms (saniyede 20 nesil)
+        double stepInterval = 0.05;
 
         while (!Raylib.WindowShouldClose())
         {
-            // Klavye Kontrolleri
+            
             if (Raylib.IsKeyPressed(KeyboardKey.Space)) paused = !paused;
             if (Raylib.IsKeyPressed(KeyboardKey.R))
             {
@@ -52,7 +52,7 @@ unsafe class Program
             if (Raylib.IsKeyPressed(KeyboardKey.Up))   stepInterval = Math.Max(0.01, stepInterval - 0.01);
             if (Raylib.IsKeyPressed(KeyboardKey.Down)) stepInterval = Math.Min(0.50, stepInterval + 0.01);
 
-            // Fare ile canlı/ölü hücre çizme
+            
             if (Raylib.IsMouseButtonDown(MouseButton.Left) || Raylib.IsMouseButtonDown(MouseButton.Right))
             {
                 int mc = Raylib.GetMouseX() / cellSize + 1;
@@ -65,7 +65,7 @@ unsafe class Program
                 }
             }
 
-            // Simülasyon Adımı (C Motorunu Çağır + Pointer Swap)
+            
             if (!paused)
             {
                 timer += Raylib.GetFrameTime();
@@ -81,7 +81,7 @@ unsafe class Program
                 }
             }
 
-            // Çizim (Render)
+            
             Raylib.BeginDrawing();
             Raylib.ClearBackground(new Color(18, 18, 22, 255));
 
@@ -103,10 +103,10 @@ unsafe class Program
                 }
             }
 
-            // Alt Bilgi Çubuğu
+            
             string status = paused ? "PAUSED" : "RUNNING";
             Raylib.DrawText(
-                $"Gen: {generation} | {status} | [SPACE] Durdur  [R] Rastgele  [C] Temizle  [Sol/Sag Tik] Ciz/Sil  [Yukari/Asagi] Hiz",
+                $"Gen: {generation} | {status} | [SPACE] Stop  [R] Random  [C] Clear  [Left/Right Click] Draw/Delete  [Up Arrow/Down Arrow] Speed",
                 10, rows * cellSize + 12, 16, Color.LightGray
             );
 

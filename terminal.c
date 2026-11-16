@@ -19,8 +19,6 @@ void render(int rows, int cols, const uint8_t *map) {
 }
 
 int main() {
-    srand(time(NULL));
-
     size_t total_cells = (size_t)(MAX_HEIGHT + 2) * (MAX_WIDTH + 2);
     uint8_t *current_gen = calloc(total_cells, sizeof(uint8_t));
     uint8_t *next_gen    = calloc(total_cells, sizeof(uint8_t));
