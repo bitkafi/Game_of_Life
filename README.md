@@ -4,6 +4,10 @@ A data-oriented implementation of Conway's Game of Life. The simulation core is 
 
 ![Conway's Game of Life Screenshot](screenshot.png)
 
+
+## Disclaimer 
+The simulation engine is written by me; the C# Raylib frontend was generated with AI assistance and reviewed by me.For Your Interest.
+
 ## Architecture & Optimizations
 
 - **Decoupled core and frontend (`engine.c` / `GolUI`)**
